@@ -20,33 +20,14 @@
     .legend p { margin: 6px 0; }
     .legend strong { text-decoration: underline; }
 
-    .tabs { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
-    .tab-btn { padding: 10px 20px; background: #e2e8f0; border: none; cursor: pointer; border-radius: 5px; }
-    .tab-btn.active { background: #4F46E5; color: white; }
-
-    .content { display: none; }
-    .content.active { display: block; }
-
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-    .bar-chart { margin-top: 40px; }
-    .bar { background: #4F46E5; height: 20px; margin-bottom: 10px; border-radius: 5px; }
-    .bar-label { margin-bottom: 5px; font-weight: bold; }
-
     .trade-table-container {
-      max-width: 700px;
+      max-width: 900px;
       margin: 30px auto;
       background: #dbeafe;
       padding: 15px 20px;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       color: #1e40af;
-    }
-    .trade-table-container h2 {
-      text-align: center;
-      margin-top: 0;
-      margin-bottom: 15px;
     }
     table {
       width: 100%;
@@ -68,135 +49,39 @@
   <h1>Trade Guide</h1>
 
   <div class="legend">
-    <p><strong>TSU (Trade Score Unit):</strong> A calculated value that represents how valuable or tradable an item is based on its rarity, how hard it is to get, and its usefulness. Higher TSU = more value.</p>
-    <p>Now using predefined TSU values and fixed R, LI, U ratings (out of 10).</p>
+    <p><strong>TSU (Trade Score Unit):</strong> Represents the trade value of items based on rarity, obtainability, and usefulness. No currency is used; all trades are item-for-item only. You can only trade up to two tiers higher (e.g., books → logs → cobblestone). Some items require specific items only.</p>
+    <ul>
+      <li><strong>30 Diamonds</strong> = <strong>1 Obsidian</strong></li>
+      <li><strong>15 Obsidian</strong> = <strong>1 Golden Apple</strong></li>
+      <li><strong>30 Golden Apples</strong> = <strong>2 God Apples</strong></li>
+    </ul>
   </div>
 
-  <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('exchange')">Exchange Rates</button>
-    <button class="tab-btn" onclick="showTab('chart')">Graph View</button>
+  <div class="trade-table-container">
+    <h2>Item Values & Recommended Trades</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>TSU</th>
+          <th>R / LI / U</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Books</td><td>5</td><td>2 / 2 / 3</td></tr>
+        <tr><td>Wood Logs</td><td>10</td><td>2 / 2 / 5</td></tr>
+        <tr><td>Cobblestone</td><td>15</td><td>1 / 1 / 5</td></tr>
+        <tr><td>Coal</td><td>25</td><td>2 / 2 / 4</td></tr>
+        <tr><td>Iron</td><td>45</td><td>5 / 4 / 3</td></tr>
+        <tr><td>Gold</td><td>65</td><td>6 / 5 / 8</td></tr>
+        <tr><td>Lapis</td><td>60</td><td>5 / 4 / 7</td></tr>
+        <tr><td>Emerald</td><td>107</td><td>8 / 6 / 5</td></tr>
+        <tr><td>Diamond</td><td>250</td><td>9 / 7 / 10</td></tr>
+        <tr><td>Obsidian</td><td>275</td><td>7 / 9 / 3</td></tr>
+        <tr><td>Golden Apple</td><td>400</td><td>9 / 7 / 10</td></tr>
+        <tr><td>God Apple</td><td>500</td><td>10 / 10 / 10</td></tr>
+      </tbody>
+    </table>
   </div>
-
-  <div id="exchange" class="content active">
-    <div class="grid" id="itemGrid"></div>
-
-    <div class="trade-table-container">
-      <h2>Item Price List (TSU)</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>TSU (Price)</th>
-          </tr>
-        </thead>
-        <tbody id="priceTableBody"></tbody>
-      </table>
-    </div>
-
-    <div class="trade-table-container">
-      <h2>Recommended Trade Prices (Books as Currency)</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Recommended Price</th>
-          </tr>
-        </thead>
-        <tbody id="recommendedPriceBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div id="chart" class="content">
-    <div class="bar-chart" id="barChart"></div>
-  </div>
-
-  <script>
-    const items = [
-      { name: "Books", TSU: 5, R: 2, LI: 2, U: 3 },
-      { name: "Wood Logs", TSU: 10, R: 2, LI: 2, U: 5 },
-      { name: "Cobblestone", TSU: 15, R: 1, LI: 1, U: 5 },
-      { name: "Coal", TSU: 25, R: 2, LI: 2, U: 4 },
-      { name: "Iron", TSU: 45, R: 5, LI: 4, U: 3 },
-      { name: "Gold", TSU: 65, R: 6, LI: 5, U: 8 },
-      { name: "Lapis", TSU: 60, R: 5, LI: 4, U: 7 },
-      { name: "Emerald", TSU: 107, R: 8, LI: 6, U: 5 },
-      { name: "Diamond", TSU: 250, R: 9, LI: 7, U: 10 },
-      { name: "Obsidian", TSU: 100, R: 7, LI: 9, U: 3 }
-    ];
-
-    function showTab(tabId) {
-      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelector(`.tab-btn[onclick="showTab('${tabId}')"]`).classList.add('active');
-    }
-
-    function renderCards() {
-      const container = document.getElementById("itemGrid");
-      container.innerHTML = '';
-      items.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h2>${item.name}</h2>
-          <p><strong>TSU:</strong> ${item.TSU}</p>
-          <p><strong>R:</strong> ${item.R}/10 | <strong>LI:</strong> ${item.LI}/10 | <strong>U:</strong> ${item.U}/10</p>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function renderPriceList() {
-      const tbody = document.getElementById("priceTableBody");
-      tbody.innerHTML = '';
-      items.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${item.name}</td>
-          <td>${item.TSU}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderRecommendedPrices() {
-      // Example: recommended price equals TSU for simplicity
-      const tbody = document.getElementById("recommendedPriceBody");
-      tbody.innerHTML = '';
-      items.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${item.name}</td>
-          <td>${item.TSU} Books</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderBarChart() {
-      const chart = document.getElementById('barChart');
-      chart.innerHTML = '';
-      items.forEach(item => {
-        const barLabel = document.createElement('div');
-        barLabel.className = 'bar-label';
-        barLabel.textContent = item.name + ` (TSU: ${item.TSU})`;
-
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.style.width = item.TSU + 'px'; // Width proportional to TSU (scale might need adjustment)
-
-        chart.appendChild(barLabel);
-        chart.appendChild(bar);
-      });
-    }
-
-    // Initial render calls
-    renderCards();
-    renderPriceList();
-    renderRecommendedPrices();
-    renderBarChart();
-  </script>
 </body>
 </html>
