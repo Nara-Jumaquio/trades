@@ -92,8 +92,24 @@
             <th>TSU (Price)</th>
           </tr>
         </thead>
-        <tbody id="tradeTableBody">
-          <!-- JavaScript inserts rows here -->
+        <tbody id="priceTableBody">
+          <!-- Price rows will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="trade-table-container">
+      <h2>Recommended Trade Prices</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Recommended Rate</th>
+          </tr>
+        </thead>
+        <tbody id="tradeSuggestionBody">
+          <!-- Trade suggestion rows will be inserted here -->
         </tbody>
       </table>
     </div>
@@ -137,18 +153,46 @@
       });
     }
 
-    function renderTradeTable() {
-      const tbody = document.getElementById("tradeTableBody");
+    function renderPriceList() {
+      const tbody = document.getElementById("priceTableBody");
       tbody.innerHTML = '';
       items.forEach(item => {
         const tsu = calculateTSU(item.R, item.LI, item.U);
         const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${item.name}</td>
-          <td>${tsu}</td>
-        `;
+        row.innerHTML = `<td>${item.name}</td><td>${tsu}</td>`;
         tbody.appendChild(row);
       });
+    }
+
+    function renderTradeSuggestions() {
+      const tbody = document.getElementById("tradeSuggestionBody");
+      tbody.innerHTML = '';
+
+      const tsuMap = {};
+      items.forEach(item => {
+        tsuMap[item.name] = calculateTSU(item.R, item.LI, item.U);
+      });
+
+      for (let i = 0; i < items.length; i++) {
+        for (let j = 0; j < items.length; j++) {
+          if (i === j) continue;
+          const fromItem = items[i];
+          const toItem = items[j];
+          const fromTSU = tsuMap[fromItem.name];
+          const toTSU = tsuMap[toItem.name];
+
+          const rate = Math.round(fromTSU / toTSU);
+          if (rate < 1) continue;
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${fromItem.name}</td>
+            <td>${toItem.name}</td>
+            <td>${rate} ${fromItem.name}${rate > 1 ? 's' : ''} = 1 ${toItem.name}</td>
+          `;
+          tbody.appendChild(row);
+        }
+      }
     }
 
     function renderChart() {
@@ -175,7 +219,8 @@
     }
 
     renderCards();
-    renderTradeTable();
+    renderPriceList();
+    renderTradeSuggestions();
     renderChart();
   </script>
 </body>
