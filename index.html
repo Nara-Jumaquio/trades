@@ -17,22 +17,23 @@
       color: #2d3748;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .legend p {
-      margin: 6px 0;
-    }
-    .legend strong {
-      text-decoration: underline;
-    }
+    .legend p { margin: 6px 0; }
+    .legend strong { text-decoration: underline; }
+
     .tabs { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
     .tab-btn { padding: 10px 20px; background: #e2e8f0; border: none; cursor: pointer; border-radius: 5px; }
     .tab-btn.active { background: #4F46E5; color: white; }
+
     .content { display: none; }
     .content.active { display: block; }
+
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
     .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
     .bar-chart { margin-top: 40px; }
     .bar { background: #4F46E5; height: 20px; margin-bottom: 10px; border-radius: 5px; }
     .bar-label { margin-bottom: 5px; font-weight: bold; }
+
     .trade-table-container {
       max-width: 700px;
       margin: 30px auto 0 auto;
@@ -68,7 +69,10 @@
 
   <div class="legend">
     <p><strong>TSU (Trade Score Unit):</strong> A calculated value that represents how valuable or tradable an item is based on its rarity, how hard it is to get, and its usefulness. Higher TSU = more value.</p>
-    <p><strong>Now using fixed TSU values:</strong> based on R, LI, U ratings out of 10.</p>
+    <p><strong>Formula:</strong> <code>TSU = R × LI × √U</code></p>
+    <p><strong>R (Rarity):</strong> How rare the item is — affects its value and demand.</p>
+    <p><strong>LI (Labor Intensity):</strong> How hard or time-consuming it is to obtain.</p>
+    <p><strong>U (Usefulness):</strong> The usefulness or magical potential of the item.</p>
   </div>
 
   <div class="tabs">
@@ -77,7 +81,7 @@
   </div>
 
   <div id="exchange" class="content active">
-    <div class="grid" id="cardGrid">
+    <div class="grid">
       <!-- Cards inserted by JavaScript -->
     </div>
 
@@ -104,64 +108,91 @@
 
   <script>
     const items = [
-      { name: "Books", TSU: 5, R: 2, LI: 2, U: 3 },
-      { name: "Wood Logs", TSU: 10, R: 2, LI: 2, U: 5 },
-      { name: "Cobblestone", TSU: 15, R: 1, LI: 1, U: 5 },
-      { name: "Coal", TSU: 25, R: 2, LI: 2, U: 4 },
-      { name: "Iron", TSU: 45, R: 5, LI: 4, U: 3 },
-      { name: "Gold", TSU: 65, R: 6, LI: 5, U: 8 },
-      { name: "Lapis", TSU: 60, R: 5, LI: 4, U: 7 },
-      { name: "Emerald", TSU: 107, R: 8, LI: 6, U: 5 },
-      { name: "Diamond", TSU: 250, R: 9, LI: 7, U: 10 },
-      { name: "Obsidian", TSU: 100, R: 7, LI: 9, U: 3 }
+      { name: "Books", R: 3, LI: 3, U: 6 },
+      { name: "Wood Logs", R: 2, LI: 2, U: 2 },
+      { name: "Cobblestone", R: 1, LI: 1, U: 1 },
+      { name: "Coal", R: 3, LI: 3, U: 4 },
+      { name: "Iron", R: 5, LI: 5, U: 3 },
+      { name: "Gold", R: 6, LI: 5, U: 8 },
+      { name: "Lapis", R: 5, LI: 4, U: 7 },
+      { name: "Emerald", R: 8, LI: 6, U: 5 },
+      { name: "Diamond", R: 9, LI: 7, U: 9 },
+      { name: "Golden Apple", R: 9, LI: 9, U: 10 },
+      { name: "God Apple", R: 10, LI: 10, U: 12 },
+      { name: "Obsidian", R: 7, LI: 9, U: 1 }
     ];
 
+    // Calculate TSU for an item
+    function calculateTSU(R, LI, U) {
+      return R * LI * Math.sqrt(U);
+    }
+
+    // Render item cards
     function renderCards() {
-      const grid = document.getElementById("cardGrid");
-      grid.innerHTML = '';
+      const container = document.querySelector("#exchange .grid");
+      container.innerHTML = '';
       items.forEach(item => {
+        const tsu = calculateTSU(item.R, item.LI, item.U).toFixed(2);
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `
           <h2>${item.name}</h2>
-          <p><strong>TSU:</strong> ${item.TSU}</p>
-          <p><strong>R:</strong> ${item.R}/10 | <strong>LI:</strong> ${item.LI}/10 | <strong>U:</strong> ${item.U}/10</p>
+          <p><strong>TSU:</strong> ${tsu}</p>
+          <p><strong>R:</strong> ${item.R} | <strong>LI:</strong> ${item.LI} | <strong>U:</strong> ${item.U}</p>
         `;
-        grid.appendChild(card);
+        container.appendChild(card);
       });
     }
 
+    // Render the price list & recommended trades based on TSU
     function renderTradeTable() {
       const tbody = document.getElementById("tradeTableBody");
       tbody.innerHTML = '';
-      const bookTSU = items.find(i => i.name === "Books").TSU;
+
+      const diamondTSU = calculateTSU(9, 7, 9);
 
       items.forEach(item => {
-        const tsu = item.TSU;
-        const trade = item.name === "Books"
-          ? "Base Item"
-          : `${Math.round(tsu / bookTSU)} Books = 1 ${item.name}`;
+        const tsu = calculateTSU(item.R, item.LI, item.U);
+        const unitsPerDiamond = (diamondTSU / tsu).toFixed(2);
+
+        let tradeText;
+        if (item.name === "Obsidian") {
+          tradeText = "30 Diamonds = 1 Obsidian";
+        } else if (item.name === "Golden Apple") {
+          tradeText = "15 Obsidian = 1 Golden Apple";
+        } else if (item.name === "God Apple") {
+          tradeText = "30 Golden Apples = 2 God Apples";
+        } else if (unitsPerDiamond >= 1.1) {
+          tradeText = `${unitsPerDiamond} ${item.name} ≈ 1 Diamond`;
+        } else if (unitsPerDiamond >= 0.1) {
+          const diamondsPerUnit = (tsu / diamondTSU).toFixed(2);
+          tradeText = `1 ${item.name} ≈ ${diamondsPerUnit} Diamond${diamondsPerUnit > 1 ? 's' : ''}`;
+        } else {
+          tradeText = `1 ${item.name} ≈ less than 0.1 Diamond`;
+        }
 
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${item.name}</td>
-          <td>${tsu}</td>
-          <td>${trade}</td>
+          <td>${tsu.toFixed(2)}</td>
+          <td>${tradeText}</td>
         `;
         tbody.appendChild(row);
       });
     }
 
+    // Render bar chart
     function renderChart() {
       const chart = document.getElementById("barChart");
       chart.innerHTML = '';
       items.forEach(item => {
+        const tsu = calculateTSU(item.R, item.LI, item.U);
         const label = document.createElement("div");
         label.className = "bar-label";
-        label.innerText = `${item.name} (${item.TSU})`;
+        label.innerText = `${item.name} (${tsu.toFixed(2)})`;
         const bar = document.createElement("div");
         bar.className = "bar";
-        bar.style.width = `${item.TSU * 2}px`;
+        bar.style.width = `${tsu * 10}px`;
         chart.appendChild(label);
         chart.appendChild(bar);
       });
@@ -174,97 +205,9 @@
       document.getElementById(tabId).classList.add("active");
     }
 
-    // Run on load
     renderCards();
     renderTradeTable();
     renderChart();
   </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trade Guide</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-    h1 { text-align: center; font-size: 2em; color: #2d3748; }
-    .legend {
-      max-width: 700px;
-      margin: 0 auto 20px auto;
-      background: #e2e8f0;
-      padding: 15px 20px;
-      border-radius: 8px;
-      font-size: 0.9em;
-      color: #2d3748;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .legend p { margin: 6px 0; }
-    .legend strong { text-decoration: underline; }
-
-    .trade-table-container {
-      max-width: 900px;
-      margin: 30px auto;
-      background: #dbeafe;
-      padding: 15px 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      color: #1e40af;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 1em;
-    }
-    th, td {
-      padding: 10px 15px;
-      border: 1px solid #a5b4fc;
-      text-align: center;
-    }
-    th {
-      background-color: #6366f1;
-      color: white;
-    }
-  </style>
-</head>
-<body>
-  <h1>Trade Guide</h1>
-
-  <div class="legend">
-    <p><strong>TSU (Trade Score Unit):</strong> Represents the trade value of items based on rarity, obtainability, and usefulness. No currency is used; all trades are item-for-item only. You can only trade up to two tiers higher (e.g., books → logs → cobblestone). Some items require specific items only.</p>
-    <ul>
-      <li><strong>30 Diamonds</strong> = <strong>1 Obsidian</strong></li>
-      <li><strong>15 Obsidian</strong> = <strong>1 Golden Apple</strong></li>
-      <li><strong>30 Golden Apples</strong> = <strong>2 God Apples</strong></li>
-    </ul>
-  </div>
-
-  <div class="trade-table-container">
-    <h2>Item Values & Recommended Trades</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Item</th>
-          <th>TSU</th>
-          <th>R / LI / U</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Books</td><td>5</td><td>2 / 2 / 3</td></tr>
-        <tr><td>Wood Logs</td><td>10</td><td>2 / 2 / 5</td></tr>
-        <tr><td>Cobblestone</td><td>15</td><td>1 / 1 / 5</td></tr>
-        <tr><td>Coal</td><td>25</td><td>2 / 2 / 4</td></tr>
-        <tr><td>Iron</td><td>45</td><td>5 / 4 / 3</td></tr>
-        <tr><td>Gold</td><td>65</td><td>6 / 5 / 8</td></tr>
-        <tr><td>Lapis</td><td>60</td><td>5 / 4 / 7</td></tr>
-        <tr><td>Emerald</td><td>107</td><td>8 / 6 / 5</td></tr>
-        <tr><td>Diamond</td><td>250</td><td>9 / 7 / 10</td></tr>
-        <tr><td>Obsidian</td><td>275</td><td>7 / 9 / 3</td></tr>
-        <tr><td>Golden Apple</td><td>400</td><td>9 / 7 / 10</td></tr>
-        <tr><td>God Apple</td><td>500</td><td>10 / 10 / 10</td></tr>
-      </tbody>
-    </table>
-  </div>
 </body>
 </html>
