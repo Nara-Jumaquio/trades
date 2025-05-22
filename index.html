@@ -36,7 +36,7 @@
 
     .trade-table-container {
       max-width: 700px;
-      margin: 30px auto 0 auto;
+      margin: 30px auto;
       background: #dbeafe;
       padding: 15px 20px;
       border-radius: 8px;
@@ -69,10 +69,7 @@
 
   <div class="legend">
     <p><strong>TSU (Trade Score Unit):</strong> A calculated value that represents how valuable or tradable an item is based on its rarity, how hard it is to get, and its usefulness. Higher TSU = more value.</p>
-    <p><strong>Formula:</strong> <code>TSU = R × LI × √U</code></p>
-    <p><strong>R (Rarity):</strong> How rare the item is — affects its value and demand.</p>
-    <p><strong>LI (Labor Intensity):</strong> How hard or time-consuming it is to obtain.</p>
-    <p><strong>U (Usefulness):</strong> The usefulness or magical potential of the item.</p>
+    <p>Now using predefined TSU values and fixed R, LI, U ratings (out of 10).</p>
   </div>
 
   <div class="tabs">
@@ -92,25 +89,20 @@
             <th>TSU (Price)</th>
           </tr>
         </thead>
-        <tbody id="priceTableBody">
-          <!-- Price rows will be inserted here -->
-        </tbody>
+        <tbody id="priceTableBody"></tbody>
       </table>
     </div>
 
     <div class="trade-table-container">
-      <h2>Recommended Trade Prices</h2>
+      <h2>Recommended Trade Prices (Books as Currency)</h2>
       <table>
         <thead>
           <tr>
-            <th>From</th>
-            <th>To</th>
-            <th>Recommended Rate</th>
+            <th>Item</th>
+            <th>Recommended Price</th>
           </tr>
         </thead>
-        <tbody id="tradeSuggestionBody">
-          <!-- Trade suggestion rows will be inserted here -->
-        </tbody>
+        <tbody id="recommendedPriceBody"></tbody>
       </table>
     </div>
   </div>
@@ -121,33 +113,28 @@
 
   <script>
     const items = [
-      { name: "Books", R: 3, LI: 3, U: 6 },
-      { name: "Wood Logs", R: 2, LI: 2, U: 2 },
-      { name: "Cobblestone", R: 1, LI: 1, U: 1 },
-      { name: "Coal", R: 3, LI: 3, U: 4 },
-      { name: "Iron", R: 5, LI: 5, U: 3 },
-      { name: "Gold", R: 6, LI: 5, U: 8 },
-      { name: "Lapis", R: 5, LI: 4, U: 7 },
-      { name: "Emerald", R: 8, LI: 6, U: 5 },
-      { name: "Diamond", R: 9, LI: 7, U: 9 },
-      { name: "Obsidian", R: 7, LI: 9, U: 1 }
+      { name: "Books", TSU: 5, R: 2, LI: 2, U: 3 },
+      { name: "Wood Logs", TSU: 10, R: 2, LI: 2, U: 5 },
+      { name: "Cobblestone", TSU: 15, R: 1, LI: 1, U: 5 },
+      { name: "Coal", TSU: 25, R: 2, LI: 2, U: 4 },
+      { name: "Iron", TSU: 45, R: 5, LI: 4, U: 3 },
+      { name: "Gold", TSU: 65, R: 6, LI: 5, U: 8 },
+      { name: "Lapis", TSU: 60, R: 5, LI: 4, U: 7 },
+      { name: "Emerald", TSU: 107, R: 8, LI: 6, U: 5 },
+      { name: "Diamond", TSU: 250, R: 9, LI: 7, U: 10 },
+      { name: "Obsidian", TSU: 100, R: 7, LI: 9, U: 3 }
     ];
-
-    function calculateTSU(R, LI, U) {
-      return Math.round(R * LI * Math.sqrt(U));
-    }
 
     function renderCards() {
       const container = document.getElementById("itemGrid");
       container.innerHTML = '';
       items.forEach(item => {
-        const tsu = calculateTSU(item.R, item.LI, item.U);
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `
           <h2>${item.name}</h2>
-          <p><strong>TSU:</strong> ${tsu}</p>
-          <p><strong>R:</strong> ${item.R} | <strong>LI:</strong> ${item.LI} | <strong>U:</strong> ${item.U}</p>
+          <p><strong>TSU:</strong> ${item.TSU}</p>
+          <p><strong>R:</strong> ${item.R}/10 | <strong>LI:</strong> ${item.LI}/10 | <strong>U:</strong> ${item.U}/10</p>
         `;
         container.appendChild(card);
       });
@@ -157,55 +144,36 @@
       const tbody = document.getElementById("priceTableBody");
       tbody.innerHTML = '';
       items.forEach(item => {
-        const tsu = calculateTSU(item.R, item.LI, item.U);
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${item.name}</td><td>${tsu}</td>`;
+        row.innerHTML = `<td>${item.name}</td><td>${item.TSU}</td>`;
         tbody.appendChild(row);
       });
     }
 
-    function renderTradeSuggestions() {
-      const tbody = document.getElementById("tradeSuggestionBody");
+    function renderRecommendedPrices() {
+      const tbody = document.getElementById("recommendedPriceBody");
       tbody.innerHTML = '';
+      const bookTSU = items.find(item => item.name === "Books").TSU;
 
-      const tsuMap = {};
       items.forEach(item => {
-        tsuMap[item.name] = calculateTSU(item.R, item.LI, item.U);
+        if (item.name === "Books") return;
+        const booksNeeded = Math.round(item.TSU / bookTSU);
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${item.name}</td><td>${booksNeeded} Books = 1 ${item.name}</td>`;
+        tbody.appendChild(row);
       });
-
-      for (let i = 0; i < items.length; i++) {
-        for (let j = 0; j < items.length; j++) {
-          if (i === j) continue;
-          const fromItem = items[i];
-          const toItem = items[j];
-          const fromTSU = tsuMap[fromItem.name];
-          const toTSU = tsuMap[toItem.name];
-
-          const rate = Math.round(fromTSU / toTSU);
-          if (rate < 1) continue;
-
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${fromItem.name}</td>
-            <td>${toItem.name}</td>
-            <td>${rate} ${fromItem.name}${rate > 1 ? 's' : ''} = 1 ${toItem.name}</td>
-          `;
-          tbody.appendChild(row);
-        }
-      }
     }
 
     function renderChart() {
       const chart = document.getElementById("barChart");
       chart.innerHTML = '';
       items.forEach(item => {
-        const tsu = calculateTSU(item.R, item.LI, item.U);
         const label = document.createElement("div");
         label.className = "bar-label";
-        label.innerText = `${item.name} (${tsu})`;
+        label.innerText = `${item.name} (${item.TSU})`;
         const bar = document.createElement("div");
         bar.className = "bar";
-        bar.style.width = `${tsu * 10}px`;
+        bar.style.width = `${item.TSU * 2}px`;
         chart.appendChild(label);
         chart.appendChild(bar);
       });
@@ -220,7 +188,7 @@
 
     renderCards();
     renderPriceList();
-    renderTradeSuggestions();
+    renderRecommendedPrices();
     renderChart();
   </script>
 </body>
