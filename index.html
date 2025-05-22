@@ -6,7 +6,7 @@
   <title>Trade Guide</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-    h1 { text-align: center; font-size: 2em; color: #2d3748; }
+    h1 { text-align: center; font-size: 2em; color: #2d3748; margin-bottom: 30px;}
     .legend {
       max-width: 700px;
       margin: 0 auto 20px auto;
@@ -24,44 +24,21 @@
     .tab-btn { padding: 10px 20px; background: #e2e8f0; border: none; cursor: pointer; border-radius: 5px; }
     .tab-btn.active { background: #4F46E5; color: white; }
 
-    .content { display: none; }
+    .content { display: none; max-width: 700px; margin: 0 auto; }
     .content.active { display: block; }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-    .bar-chart { margin-top: 40px; }
-    .bar { background: #4F46E5; height: 20px; margin-bottom: 10px; border-radius: 5px; }
-    .bar-label { margin-bottom: 5px; font-weight: bold; }
-
-    .trade-table-container {
-      max-width: 700px;
-      margin: 30px auto 0 auto;
-      background: #dbeafe;
-      padding: 15px 20px;
-      border-radius: 8px;
+    .trade-list {
+      white-space: pre-line;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      color: #1e40af;
-    }
-    .trade-table-container h2 {
-      text-align: center;
-      margin-top: 0;
-      margin-bottom: 15px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
+      font-family: monospace;
       font-size: 1em;
+      line-height: 1.5em;
+      color: #2d3748;
     }
-    th, td {
-      padding: 10px 15px;
-      border: 1px solid #a5b4fc;
-      text-align: center;
-    }
-    th {
-      background-color: #6366f1;
-      color: white;
-    }
+
   </style>
 </head>
 <body>
@@ -81,100 +58,102 @@
   </div>
 
   <div id="exchange" class="content active">
-    <div class="grid">
-      <!-- Cards inserted by JavaScript -->
-    </div>
-
-    <div class="trade-table-container">
-      <h2>Price List & Recommended Trades</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>TSU (Price per Unit)</th>
-            <th>Recommended Trade</th>
-          </tr>
-        </thead>
-        <tbody id="tradeTableBody">
-          <!-- Rows inserted by JavaScript -->
-        </tbody>
-      </table>
+    <div class="trade-list" id="tradeList">
+      <!-- Trade info inserted by JS -->
     </div>
   </div>
 
   <div id="chart" class="content">
-    <div class="bar-chart" id="barChart"></div>
+    <!-- Placeholder for graph if needed -->
+    <p style="text-align:center; color:#888;">Graph View coming soon.</p>
   </div>
 
   <script>
     const items = [
-      { name: "Books", R: 3, LI: 3, U: 6 },
-      { name: "Wood Logs", R: 2, LI: 2, U: 2 },
-      { name: "Cobblestone", R: 1, LI: 1, U: 1 },
-      { name: "Coal", R: 3, LI: 3, U: 4 },
-      { name: "Iron", R: 5, LI: 5, U: 3 },
+      { name: "Books", R: 2, LI: 2, U: 3 },
+      { name: "Wood Logs", R: 2, LI: 2, U: 5 },
+      { name: "Cobblestone", R: 1, LI: 1, U: 5 },
+      { name: "Coal", R: 2, LI: 2, U: 4 },
+      { name: "Iron", R: 5, LI: 4, U: 3 },
       { name: "Gold", R: 6, LI: 5, U: 8 },
       { name: "Lapis", R: 5, LI: 4, U: 7 },
       { name: "Emerald", R: 8, LI: 6, U: 5 },
-      { name: "Diamond", R: 9, LI: 7, U: 9 },
-      { name: "Golden Apple", R: 9, LI: 9, U: 10 },
-      { name: "God Apple", R: 10, LI: 10, U: 12 },
-      { name: "Obsidian", R: 7, LI: 9, U: 1 }
+      { name: "Diamond", R: 9, LI: 7, U: 10 },
+      { name: "Obsidian", R: 7, LI: 9, U: 3 },
+      { name: "Golden Apple", R: 9, LI: 7, U: 10 },
+      { name: "God Apple", R: 10, LI: 10, U: 10 }
     ];
 
-    // Calculate TSU for an item
     function calculateTSU(R, LI, U) {
-      return R * LI * Math.sqrt(U);
+      return Math.round(R * LI * Math.sqrt(U));
     }
 
-    // Render item cards
-    function renderCards() {
-      const container = document.querySelector("#exchange .grid");
-      container.innerHTML = '';
-      items.forEach(item => {
-        const tsuValue = calculateTSU(item.R, item.LI, item.U);
-        const tsuRounded = Math.round(tsuValue);
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h2>${item.name}</h2>
-          <p><strong>TSU:</strong> ${tsuRounded}</p>
-          <p><strong>R:</strong> ${item.R}</p>
-          <p><strong>LI:</strong> ${item.LI}</p>
-          <p><strong>U:</strong> ${item.U}</p>
-        `;
-        container.appendChild(card);
+    // Sort items by TSU descending
+    items.forEach(item => {
+      item.TSU = calculateTSU(item.R, item.LI, item.U);
+    });
+    items.sort((a,b) => b.TSU - a.TSU);
+
+    // Function to get recommended trades for an item based on TSU rules
+    function getRecommendedTrades(itemIndex) {
+      const item = items[itemIndex];
+      const itemTSU = item.TSU;
+
+      // Items can trade with up to 2 items above it in TSU (higher TSU values)
+      // except special rules:
+      // - Emerald cannot trade for Obsidian
+      // - Obsidian requires 20 Diamonds per 1 Obsidian
+      // - Golden Apple requires 20 Diamonds per 1 Golden Apple
+      // - God Apple requires 40 Diamonds per 1 God Apple
+
+      const recommended = [];
+
+      // Special cases first
+      if (item.name === "Obsidian") {
+        recommended.push("20 Diamonds for 1 Obsidian");
+      } else if (item.name === "Golden Apple") {
+        recommended.push("20 Diamonds for 1 Golden Apple");
+      } else if (item.name === "God Apple") {
+        recommended.push("40 Diamonds for 1 God Apple");
+      } else {
+        // Find up to two items with higher TSU that this item can trade for
+        // Higher TSU means items with index less than itemIndex (sorted descending)
+        let count = 0;
+        for (let i = 0; i < itemIndex && count < 2; i++) {
+          // Prevent Emerald->Obsidian trade
+          if (item.name === "Emerald" && items[i].name === "Obsidian") {
+            continue;
+          }
+          recommended.push(items[i].name);
+          count++;
+        }
+      }
+
+      return recommended.length > 0 ? recommended.join(", ") : "No recommended trades";
+    }
+
+    function generateTradeList() {
+      let text = "";
+      items.forEach((item, idx) => {
+        text += `${item.name}\n`;
+        text += `TSU: ${item.TSU}\n`;
+        text += `R: ${item.R}/10 | LI: ${item.LI}/10 | U: ${item.U}/10\n`;
+        text += `Recommended Trade: ${getRecommendedTrades(idx)}\n\n`;
       });
+      return text.trim();
     }
 
-    // Render trade table rows
-    function renderTradeTable() {
-      const tbody = document.getElementById("tradeTableBody");
-      tbody.innerHTML = '';
-      items.forEach(item => {
-        const tsuValue = calculateTSU(item.R, item.LI, item.U);
-        const tsuRounded = Math.round(tsuValue);
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${item.name}</td>
-          <td>${tsuRounded}</td>
-          <td>Trade info here</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
+    // Render trade list in the tradeList div
+    document.getElementById("tradeList").textContent = generateTradeList();
 
-    // Tab switching function
-    function showTab(tabId) {
-      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
-    }
+    // Tabs logic
+    function showTab(tabName) {
+      document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
+      document.getElementById(tabName).classList.add("active");
 
-    // Initial render
-    renderCards();
-    renderTradeTable();
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelector(`button[onclick="showTab('${tabName}')"]`).classList.add("active");
+    }
   </script>
 </body>
 </html>
