@@ -125,6 +125,14 @@
       { name: "Obsidian", TSU: 100, R: 7, LI: 9, U: 3 }
     ];
 
+    function showTab(tabId) {
+      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.tab-btn[onclick="showTab('${tabId}')"]`).classList.add('active');
+    }
+
     function renderCards() {
       const container = document.getElementById("itemGrid");
       container.innerHTML = '';
@@ -144,52 +152,51 @@
       const tbody = document.getElementById("priceTableBody");
       tbody.innerHTML = '';
       items.forEach(item => {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${item.name}</td><td>${item.TSU}</td>`;
-        tbody.appendChild(row);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.TSU}</td>
+        `;
+        tbody.appendChild(tr);
       });
     }
 
     function renderRecommendedPrices() {
+      // Example: recommended price equals TSU for simplicity
       const tbody = document.getElementById("recommendedPriceBody");
       tbody.innerHTML = '';
-      const bookTSU = items.find(item => item.name === "Books").TSU;
-
       items.forEach(item => {
-        if (item.name === "Books") return;
-        const booksNeeded = Math.round(item.TSU / bookTSU);
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${item.name}</td><td>${booksNeeded} Books = 1 ${item.name}</td>`;
-        tbody.appendChild(row);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.TSU} Books</td>
+        `;
+        tbody.appendChild(tr);
       });
     }
 
-    function renderChart() {
-      const chart = document.getElementById("barChart");
+    function renderBarChart() {
+      const chart = document.getElementById('barChart');
       chart.innerHTML = '';
       items.forEach(item => {
-        const label = document.createElement("div");
-        label.className = "bar-label";
-        label.innerText = `${item.name} (${item.TSU})`;
-        const bar = document.createElement("div");
-        bar.className = "bar";
-        bar.style.width = `${item.TSU * 2}px`;
-        chart.appendChild(label);
+        const barLabel = document.createElement('div');
+        barLabel.className = 'bar-label';
+        barLabel.textContent = item.name + ` (TSU: ${item.TSU})`;
+
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.width = item.TSU + 'px'; // Width proportional to TSU (scale might need adjustment)
+
+        chart.appendChild(barLabel);
         chart.appendChild(bar);
       });
     }
 
-    function showTab(tabId) {
-      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
-      document.querySelectorAll(".content").forEach(content => content.classList.remove("active"));
-      document.querySelector(`.tab-btn[onclick="showTab('${tabId}')"]`).classList.add("active");
-      document.getElementById(tabId).classList.add("active");
-    }
-
+    // Initial render calls
     renderCards();
     renderPriceList();
     renderRecommendedPrices();
-    renderChart();
+    renderBarChart();
   </script>
 </body>
 </html>
